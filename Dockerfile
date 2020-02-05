@@ -26,10 +26,11 @@ RUN cd ${SCRIPT_DIR}; ${SCRIPT_DIR}/setup_system_proxy.sh
 #### update ubuntu and Install Python 3
 ########################################
 RUN apt-get update -y && \
-    apt-get install -y apt-utils automake pkg-config libpcre3-dev zlib1g-dev liblzma-dev && \
-    apt-get install -y curl iputils-ping nmap net-tools build-essential software-properties-common libsqlite3-dev sqlite3 bzip2 libbz2-dev git wget unzip vim python3-pip python3-setuptools python3-dev python3-venv python3-numpy python3-scipy python3-pandas python3-matplotlib && \
+    apt-get install -y apt-utils automake pkg-config libpcre3-dev zlib1g-dev liblzma-dev zip libssh-dev && \
+    apt-get install -y curl iputils-ping nmap net-tools build-essential software-properties-common libsqlite3-dev sqlite3 bzip2 libbz2-dev git wget unzip vim python-pip python3-pip python3-setuptools python3-dev python3-venv python3-numpy python3-scipy python3-pandas python3-matplotlib && \
     apt-get install -y git xz-utils && \
     apt-get install -y sudo && \
+    apt-get install -y openjdk-8-jdk && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -37,45 +38,7 @@ RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* 
     localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
 
 ENV LANG en_US.utf8
-
-###################################
-#### ---- Install Java 8 ----  ####
-###################################
-#### ---------------------------------------------------------------
-#### ---- Change below when upgrading version ----
-#### ---------------------------------------------------------------
-## https://download.oracle.com/otn-pub/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.tar.gz
-ARG JAVA_MAJOR_VERSION=${JAVA_MAJOR_VERSION:-8}
-ARG JAVA_UPDATE_VERSION=${JAVA_UPDATE_VERSION:-202}
-ARG JAVA_BUILD_NUMBER=${JAVA_BUILD_NUMBER:-08}
-ARG JAVA_DOWNLOAD_TOKEN=${JAVA_DOWNLOAD_TOKEN:-1961070e4c9b4e26a04e7f5a083f551e}
-
-#### ---------------------------------------------------------------
-#### ---- Don't change below unless you know what you are doing ----
-#### ---------------------------------------------------------------
-ARG UPDATE_VERSION=${JAVA_MAJOR_VERSION}u${JAVA_UPDATE_VERSION}
-ARG BUILD_VERSION=b${JAVA_BUILD_NUMBER}
-
-ENV JAVA_HOME_ACTUAL=${INSTALL_DIR}/jdk1.${JAVA_MAJOR_VERSION}.0_${JAVA_UPDATE_VERSION}
-ENV JAVA_HOME=${INSTALL_DIR}/java
-
-ENV PATH=$PATH:${JAVA_HOME}/bin
-
-WORKDIR ${INSTALL_DIR}
-
-RUN curl -sL --retry 3 --insecure \
-  --header "Cookie: oraclelicense=accept-securebackup-cookie;" \
-  "http://download.oracle.com/otn-pub/java/jdk/${UPDATE_VERSION}-${BUILD_VERSION}/${JAVA_DOWNLOAD_TOKEN}/jdk-${UPDATE_VERSION}-linux-x64.tar.gz" \
-  | gunzip \
-  | tar x -C ${INSTALL_DIR}
-RUN ls -al ${INSTALL_DIR} && \
-  ln -s ${JAVA_HOME_ACTUAL} ${JAVA_HOME} && \
-  rm -rf ${JAVA_HOME}/man
-
-#############################
-#### ---- JAVA_HOME --- #####
-#############################
-ENV JAVA_HOME=$INSTALL_DIR/java
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 
 ###################################
 #### ---- Install Maven 3 ---- ####
@@ -105,8 +68,7 @@ ENV PATH=${PATH}:${HOME}/.local/bin
 ## VERSIONS ##
 ENV PATH=${PATH}:${JAVA_HOME}/bin
 
-RUN ln -s ${JAVA_HOME_ACTUAL} ${JAVA_HOME} && \
-    ls -al ${INSTALL_DIR} && \
+RUN ls -al ${INSTALL_DIR} && \
     echo "PATH=${PATH}" && export JAVA_HOME=${JAVA_HOME} && export PATH=$PATH && \
     java -version && \
     mvn --version && \
@@ -170,7 +132,7 @@ ENV NPM_CONFIG_PREFIX=${NPM_CONFIG_PREFIX:-${HOME}/.npm-global}
 ENV PATH="${NPM_CONFIG_PREFIX}/bin:$PATH"
 RUN mkdir -p ${NPM_CONFIG_PREFIX} ${HOME}/.config ${HOME}/.npm && \
     chown ${USER}:${USER} -R ${NPM_CONFIG_PREFIX} ${HOME}/.config ${HOME}/.npm && \
-    export PATH=$PATH && ${SCRIPT_DIR}/install-npm-packages.sh
+    export PATH=$PATH && ${SCRIPT_DIR}/install-npm-packages.sh && chown ${USER}:${USER} -R ${HOME}/.npm
 
 ###########################################
 #### ---- entrypoint script setup ---- ####

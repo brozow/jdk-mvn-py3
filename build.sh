@@ -160,7 +160,7 @@ echo
 
 cd ${BUILD_CONTEXT}
 set -x
-sudo docker build ${REMOVE_CACHE_OPTION} -t ${imageTag} \
+docker build ${REMOVE_CACHE_OPTION} -t ${imageTag} \
     ${BUILD_ARGS} \
     ${options} \
     -f $(basename ${DOCKERFILE}) .
